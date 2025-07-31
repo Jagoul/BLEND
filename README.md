@@ -1,12 +1,8 @@
-# BLEND: Blockchain-Enhanced Network Decentralisation with Large Language Models for Long-Horizon Time-Series Forecasting
+# BLEND: Blockchain-Enhanced Network Decentralisation with Large Language Models for Time Series Forecasting
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-**Author:** [Raed Abdel-Sater](mailto:raed.abdelsater@mail.concordia.ca)  
-**Supervisor:** [Prof. A. Ben Hamza](mailto:hamza@concordia.ca)  
-**Institution:** Concordia Institute for Information Systems Engineering, Concordia University, Montreal, QC, Canada
 
 ## Abstract
 
@@ -413,20 +409,6 @@ The novel PoF protocol ensures model quality through:
 - **Electricity**: 321 household power consumption readings
 - **Traffic**: 862 San Francisco Bay Area freeway segments
 
-## Citation
-
-If you use BLEND in your research, please cite our paper:
-
-```bibtex
-@article{abdelsater2025blend,
-  title={BLEND: Blockchain-Enhanced Network Decentralisation with Large Language Models for Long-Horizon Time-Series Forecasting},
-  author={Abdel-Sater, Raed and Hamza, A. Ben},
-  journal={arXiv preprint arXiv:2025.xxxxx},
-  year={2025},
-  institution={Concordia Institute for Information Systems Engineering, Concordia University}
-}
-```
-
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
@@ -451,20 +433,6 @@ mypy blend/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Concordia Institute for Information Systems Engineering
-- Hyperledger Fabric community
-- Hugging Face Transformers library
-- PyTorch Lightning framework
-
-## Contact
-
-For questions and collaborations:
-- **Author**: [Raed Abdel-Sater](mailto:raed.abdelsater@mail.concordia.ca)
-- **Supervisor**: [Prof. A. Ben Hamza](mailto:hamza@concordia.ca)
-- **Institution**: Concordia Institute for Information Systems Engineering, Concordia University
 
 ---
 

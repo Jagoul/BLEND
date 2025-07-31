@@ -1,188 +1,483 @@
 #!/usr/bin/env python3
 """
-BLEND Setup Configuration
-Installation script for BLEND framework
+BLEND Training Script
+Main script for training BLEND models with blockchain-enhanced federated learning
 
-Author: Raed Abdel-Sater
+Usage:
+    python scripts/train_blend.py --config configs/default.yaml --dataset ETTh1
+    python scripts/train_blend.py --config configs/ett.yaml --dataset all --output results/
 """
 
-from setuptools import setup, find_packages
 import os
 import sys
+import argparse
+import json
+import yaml
+import torch
+import torch.distributed as dist
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+import numpy as np
+import pandas as pd
+from datetime import datetime
+import logging
 
-# Ensure Python version compatibility
-if sys.version_info < (3, 8):
-    raise RuntimeError("BLEND requires Python 3.8 or later")
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
 
-# Read version from __init__.py
-def get_version():
-    version_file = os.path.join("blend", "__init__.py")
-    with open(version_file, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("__version__"):
-                return line.split("=")[1].strip().strip('"').strip("'")
-    raise RuntimeError("Unable to find version string")
+from blend import BLENDFramework, BLENDConfig
+from blend.utils import DataLoader, MetricsCalculator, create_federated_splits
+from blend.utils.visualization import plot_training_curves, plot_forecasting_results
 
-# Read long description from README
-def get_long_description():
-    with open("README.md", "r", encoding="utf-8") as fh:
-        return fh.read()
 
-# Read requirements
-def get_requirements():
-    with open("requirements.txt", "r", encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+def setup_logging(output_dir: str, verbose: bool = False) -> logging.Logger:
+    """Setup logging configuration"""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create logger
+    logger = logging.getLogger('BLEND_Training')
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    
+    # Create formatters
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # File handler
+    fh = logging.FileHandler(os.path.join(output_dir, 'training.log'))
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    
+    # Console handler
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    
+    # Add handlers
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+    
+    return logger
 
-# Development requirements
-dev_requirements = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-asyncio>=0.21.0",
-    "black>=22.0.0",
-    "isort>=5.10.0", 
-    "flake8>=5.0.0",
-    "mypy>=0.991",
-    "pre-commit>=2.20.0",
-    "sphinx>=5.0.0",
-    "sphinx-rtd-theme>=1.0.0",
-    "jupyter>=1.0.0",
-    "ipywidgets>=8.0.0"
-]
 
-# Blockchain-specific requirements
-blockchain_requirements = [
-    "hyperledger-fabric>=2.4.0",
-    "cryptography>=3.4.8",
-    "web3>=6.0.0",
-    "ethereum>=2.3.0",
-    "ipfshttpclient>=0.8.0"
-]
+def load_config(config_path: str, overrides: Optional[Dict] = None) -> BLENDConfig:
+    """Load and merge configuration"""
+    with open(config_path, 'r') as f:
+        config_dict = yaml.safe_load(f)
+    
+    # Apply command line overrides
+    if overrides:
+        config_dict.update(overrides)
+    
+    return BLENDConfig(**config_dict)
 
-# Federated learning requirements
-federated_requirements = [
-    "flower>=1.4.0",
-    "syft>=0.8.0",
-    "ray>=2.0.0",
-    "grpcio>=1.50.0",
-    "grpcio-tools>=1.50.0"
-]
 
-# GPU-specific requirements
-gpu_requirements = [
-    "cupy-cuda11x>=11.0.0",
-    "nvidia-ml-py3>=7.352.0"
-]
+def prepare_datasets(
+    dataset_names: List[str],
+    data_dir: str,
+    num_miners: int,
+    config: BLENDConfig,
+    logger: logging.Logger
+) -> Tuple[Dict, Dict, Dict]:
+    """
+    Prepare federated datasets for training
+    
+    Returns:
+        Tuple of (train_data, val_data, test_data) dictionaries
+    """
+    train_data = {}
+    val_data = {}
+    test_data = {}
+    
+    for dataset_name in dataset_names:
+        logger.info(f"Loading dataset: {dataset_name}")
+        
+        # Load dataset
+        data_loader = DataLoader(
+            dataset_name=dataset_name,
+            data_dir=data_dir,
+            lookback_window=config.lookback_window,
+            prediction_horizons=config.prediction_horizons,
+            batch_size=config.batch_size
+        )
+        
+        # Create federated splits
+        fed_splits = create_federated_splits(
+            dataset=data_loader.get_full_dataset(),
+            num_clients=num_miners,
+            split_strategy='iid',  # Can be 'iid' or 'non_iid'
+            alpha=0.5  # Dirichlet parameter for non-IID
+        )
+        
+        # Create data loaders for each miner
+        for miner_id in range(num_miners):
+            train_loader, val_loader, test_loader = data_loader.create_federated_loaders(
+                client_data=fed_splits[miner_id],
+                test_split=0.2,
+                val_split=0.1
+            )
+            
+            train_data[f"{dataset_name}_miner_{miner_id}"] = train_loader
+            
+            # Use first miner's data for global validation/testing
+            if miner_id == 0:
+                val_data[dataset_name] = val_loader
+                test_data[dataset_name] = test_loader
+    
+    logger.info(f"Prepared federated datasets for {len(dataset_names)} datasets and {num_miners} miners")
+    return train_data, val_data, test_data
 
-# Visualization requirements
-viz_requirements = [
-    "matplotlib>=3.5.0",
-    "seaborn>=0.11.0",
-    "plotly>=5.10.0",
-    "wandb>=0.13.0",
-    "tensorboard>=2.10.0"
-]
 
-setup(
-    name="blend-framework",
-    version=get_version(),
+def run_training_experiment(
+    framework: BLENDFramework,
+    train_data: Dict,
+    val_data: Dict,
+    test_data: Dict,
+    output_dir: str,
+    logger: logging.Logger
+) -> Dict:
+    """Run complete training experiment"""
     
-    # Author information
-    author="Raed Abdel-Sater",
-    author_email="raed.abdel-sater@concordia.ca",
+    logger.info("Starting BLEND training experiment...")
+    start_time = datetime.now()
     
-    # Package description
-    description="BLEND: Blockchain-Enhanced Network Decentralisation with Large Language Models for Long-Horizon Time-Series Forecasting",
-    long_description=get_long_description(),
-    long_description_content_type="text/markdown",
+    # Train model
+    training_results = framework.train(
+        train_data=train_data,
+        val_data=val_data,
+        test_data=test_data
+    )
     
-    # URLs
-    url="https://github.com/yourusername/BLEND",
-    project_urls={
-        "Bug Reports": "https://github.com/yourusername/BLEND/issues",
-        "Source": "https://github.com/yourusername/BLEND",
-        "Documentation": "https://blend-framework.readthedocs.io/",
-        "Paper": "https://arxiv.org/abs/2025.xxxxx"
-    },
+    end_time = datetime.now()
+    training_duration = (end_time - start_time).total_seconds()
     
-    # Package configuration
-    packages=find_packages(exclude=["tests", "tests.*", "docs", "docs.*"]),
-    package_data={
-        "blend": [
-            "configs/*.yaml",
-            "configs/**/*.yaml",
-            "data/schemas/*.json",
-            "blockchain/contracts/*.sol"
-        ]
-    },
-    include_package_data=True,
+    logger.info(f"Training completed in {training_duration:.2f} seconds")
     
-    # Requirements
-    python_requires=">=3.8",
-    install_requires=get_requirements(),
+    # Final evaluation
+    logger.info("Performing final evaluation...")
+    final_results = framework.evaluate(
+        test_data=test_data,
+        prediction_horizons=framework.config.prediction_horizons
+    )
     
-    # Optional dependencies
-    extras_require={
-        "dev": dev_requirements,
-        "blockchain": blockchain_requirements,
-        "federated": federated_requirements,
-        "gpu": gpu_requirements,
-        "viz": viz_requirements,
-        "all": dev_requirements + blockchain_requirements + federated_requirements + gpu_requirements + viz_requirements
-    },
+    # Get training summary
+    training_summary = framework.get_training_summary()
     
-    # Entry points
-    entry_points={
-        "console_scripts": [
-            "blend-train=blend.scripts.train_blend:main",
-            "blend-eval=blend.scripts.evaluate:main",
-            "blend-setup=blend.scripts.setup_blockchain:main",
-            "blend-benchmark=blend.scripts.run_experiments:main"
-        ]
-    },
+    # Combine all results
+    experiment_results = {
+        'training_results': training_results,
+        'final_evaluation': final_results,
+        'training_summary': training_summary,
+        'training_duration': training_duration,
+        'config': framework.config.__dict__,
+        'timestamp': datetime.now().isoformat()
+    }
     
-    # Classification
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers", 
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Topic :: System :: Distributed Computing",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Operating System :: OS Independent",
-    ],
+    # Save results
+    results_path = os.path.join(output_dir, 'experiment_results.json')
+    with open(results_path, 'w') as f:
+        json.dump(experiment_results, f, indent=2, default=str)
     
-    # Keywords
-    keywords=[
-        "federated-learning",
-        "blockchain", 
-        "large-language-models",
-        "time-series-forecasting",
-        "internet-of-vehicles",
-        "consensus-protocol",
-        "distributed-systems",
-        "machine-learning"
-    ],
+    logger.info(f"Experiment results saved to {results_path}")
     
-    # License
-    license="MIT",
+    return experiment_results
+
+
+def generate_visualizations(
+    results: Dict,
+    output_dir: str,
+    logger: logging.Logger
+) -> None:
+    """Generate training and results visualizations"""
     
-    # Additional metadata
-    zip_safe=False,
-    platforms=["any"],
+    logger.info("Generating visualizations...")
     
-    # Test configuration
-    test_suite="tests",
-    tests_require=[
-        "pytest>=7.0.0",
-        "pytest-cov>=4.0.0",
-        "pytest-asyncio>=0.21.0"
-    ],
+    viz_dir = os.path.join(output_dir, 'visualizations')
+    os.makedirs(viz_dir, exist_ok=True)
     
-    # Command class for custom commands
-    cmdclass={},
-)
+    # Training curves
+    if 'training_results' in results and 'training_history' in results['training_results']:
+        plot_training_curves(
+            training_history=results['training_results']['training_history'],
+            save_path=os.path.join(viz_dir, 'training_curves.png')
+        )
+    
+    # Performance comparison
+    if 'final_evaluation' in results:
+        plot_forecasting_results(
+            results=results['final_evaluation'],
+            save_path=os.path.join(viz_dir, 'performance_comparison.png')
+        )
+    
+    logger.info(f"Visualizations saved to {viz_dir}")
+
+
+def run_ablation_study(
+    base_config: BLENDConfig,
+    train_data: Dict,
+    val_data: Dict,
+    test_data: Dict,
+    output_dir: str,
+    logger: logging.Logger
+) -> Dict:
+    """Run ablation study to evaluate component contributions"""
+    
+    logger.info("Starting ablation study...")
+    
+    ablation_results = {}
+    
+    # Ablation configurations
+    ablation_configs = {
+        'baseline': {
+            'model_alignment': False,
+            'oracle_agent': False,
+            'proof_of_forecast': False
+        },
+        'with_alignment': {
+            'model_alignment': True,
+            'oracle_agent': False,
+            'proof_of_forecast': False
+        },
+        'with_oracle': {
+            'model_alignment': True,
+            'oracle_agent': True, 
+            'proof_of_forecast': False
+        },
+        'full_blend': {
+            'model_alignment': True,
+            'oracle_agent': True,
+            'proof_of_forecast': True
+        }
+    }
+    
+    for config_name, config_overrides in ablation_configs.items():
+        logger.info(f"Running ablation: {config_name}")
+        
+        # Create modified config
+        ablation_config = BLENDConfig(**{
+            **base_config.__dict__,
+            **config_overrides
+        })
+        
+        # Initialize framework
+        framework = BLENDFramework(
+            config=ablation_config,
+            device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        )
+        
+        # Setup framework
+        framework.setup_blockchain()
+        framework.setup_agents()
+        framework.setup_global_model()
+        framework.setup_incentives()
+        
+        # Train and evaluate
+        try:
+            training_results = framework.train(
+                train_data=train_data,
+                val_data=val_data
+            )
+            
+            evaluation_results = framework.evaluate(
+                test_data=test_data,
+                prediction_horizons=[96, 192, 336, 720]
+            )
+            
+            ablation_results[config_name] = {
+                'training_summary': framework.get_training_summary(),
+                'evaluation_results': evaluation_results
+            }
+            
+        except Exception as e:
+            logger.error(f"Ablation {config_name} failed: {str(e)}")
+            ablation_results[config_name] = {'error': str(e)}
+    
+    # Save ablation results
+    ablation_path = os.path.join(output_dir, 'ablation_results.json')
+    with open(ablation_path, 'w') as f:
+        json.dump(ablation_results, f, indent=2, default=str)
+    
+    logger.info(f"Ablation study completed. Results saved to {ablation_path}")
+    return ablation_results
+
+
+def main():
+    """Main training function"""
+    parser = argparse.ArgumentParser(
+        description="Train BLEND model with blockchain-enhanced federated learning"
+    )
+    
+    # Required arguments
+    parser.add_argument(
+        '--config', type=str, required=True,
+        help='Path to configuration YAML file'
+    )
+    
+    # Data arguments
+    parser.add_argument(
+        '--dataset', type=str, default='ETTh1',
+        help='Dataset name or "all" for all datasets'
+    )
+    parser.add_argument(
+        '--data_dir', type=str, default='./data',
+        help='Data directory path'
+    )
+    
+    # Training arguments
+    parser.add_argument(
+        '--epochs', type=int, default=None,
+        help='Number of global training rounds (overrides config)'
+    )
+    parser.add_argument(
+        '--miners', type=int, default=None,
+        help='Number of miner agents (overrides config)'
+    )
+    parser.add_argument(
+        '--local_epochs', type=int, default=None,
+        help='Local training epochs per round'
+    )
+    
+    # Output arguments
+    parser.add_argument(
+        '--output', type=str, default='./results',
+        help='Output directory for results'
+    )
+    parser.add_argument(
+        '--name', type=str, default=None,
+        help='Experiment name (default: timestamp)'
+    )
+    
+    # Execution options
+    parser.add_argument(
+        '--ablation', action='store_true',
+        help='Run ablation study'
+    )
+    parser.add_argument(
+        '--no_blockchain', action='store_true',
+        help='Run without blockchain (for testing)'
+    )
+    parser.add_argument(
+        '--device', type=str, default='auto',
+        help='Training device (cuda/cpu/auto)'
+    )
+    parser.add_argument(
+        '--verbose', action='store_true',
+        help='Enable verbose logging'
+    )
+    parser.add_argument(
+        '--visualize', action='store_true',
+        help='Generate visualization plots'
+    )
+    
+    args = parser.parse_args()
+    
+    # Setup experiment directory
+    if args.name:
+        exp_name = args.name
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        exp_name = f"blend_experiment_{timestamp}"
+    
+    output_dir = os.path.join(args.output, exp_name)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Setup logging
+    logger = setup_logging(output_dir, args.verbose)
+    logger.info(f"Starting BLEND experiment: {exp_name}")
+    logger.info(f"Arguments: {vars(args)}")
+    
+    # Load configuration
+    config_overrides = {}
+    if args.epochs:
+        config_overrides['global_rounds'] = args.epochs
+    if args.miners:
+        config_overrides['num_miners'] = args.miners
+    if args.local_epochs:
+        config_overrides['local_epochs'] = args.local_epochs
+    
+    config = load_config(args.config, config_overrides)
+    logger.info(f"Configuration loaded: {config}")
+    
+    # Setup device
+    if args.device == 'auto':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device(args.device)
+    
+    logger.info(f"Using device: {device}")
+    
+    # Prepare datasets
+    if args.dataset == 'all':
+        dataset_names = ['ETTh1', 'ETTh2', 'ETTm1', 'ETTm2', 'Weather', 'Electricity', 'Traffic']
+    else:
+        dataset_names = [args.dataset]
+    
+    train_data, val_data, test_data = prepare_datasets(
+        dataset_names=dataset_names,
+        data_dir=args.data_dir,
+        num_miners=config.num_miners,
+        config=config,
+        logger=logger
+    )
+    
+    # Initialize BLEND framework
+    logger.info("Initializing BLEND framework...")
+    framework = BLENDFramework(config=config, device=device)
+    
+    # Setup framework components
+    if not args.no_blockchain:
+        framework.setup_blockchain()
+    
+    framework.setup_agents()
+    framework.setup_global_model()
+    framework.setup_incentives()
+    
+    try:
+        if args.ablation:
+            # Run ablation study
+            results = run_ablation_study(
+                base_config=config,
+                train_data=train_data,
+                val_data=val_data,
+                test_data=test_data,
+                output_dir=output_dir,
+                logger=logger
+            )
+        else:
+            # Run main training experiment
+            results = run_training_experiment(
+                framework=framework,
+                train_data=train_data,
+                val_data=val_data,
+                test_data=test_data,
+                output_dir=output_dir,
+                logger=logger
+            )
+            
+            # Save trained model
+            model_path = os.path.join(output_dir, 'trained_model.pth')
+            framework.save_model(model_path)
+            logger.info(f"Trained model saved to {model_path}")
+        
+        # Generate visualizations if requested
+        if args.visualize:
+            generate_visualizations(results, output_dir, logger)
+        
+        logger.info("Experiment completed successfully!")
+        
+        # Print summary
+        if not args.ablation and 'training_summary' in results:
+            summary = results['training_summary']
+            print(f"\n=== Training Summary ===")
+            print(f"Total rounds: {summary.get('total_rounds', 'N/A')}")
+            print(f"Consensus success rate: {summary.get('consensus_success_rate', 0):.2%}")
+            print(f"Final validation MSE: {summary.get('final_validation_mse', 'N/A')}")
+            print(f"Training stability: {summary.get('training_stability', 'N/A')}")
+        
+    except Exception as e:
+        logger.error(f"Experiment failed: {str(e)}", exc_info=True)
+        raise
+
+
+if __name__ == "__main__":
+    main()

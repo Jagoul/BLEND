@@ -4,6 +4,10 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**Author:** [Raed Abdel-Sater](mailto:raed.abdelsater@mail.concordia.ca)  
+**Supervisor:** [Prof. A. Ben Hamza](mailto:hamza@concordia.ca)  
+**Institution:** Concordia Institute for Information Systems Engineering, Concordia University, Montreal, QC, Canada
+
 ## Abstract
 
 This repository contains the official implementation of **BLEND**, a novel framework that advances distributed intelligence through the synergy of blockchain technology and Large Language Models (LLMs) for long-horizon time-series forecasting in Internet of Vehicles (IoV) environments.
@@ -383,11 +387,12 @@ The novel PoF protocol ensures model quality through:
 If you use BLEND in your research, please cite our paper:
 
 ```bibtex
-@article{abdel2025blend,
+@article{abdelsater2025blend,
   title={BLEND: Blockchain-Enhanced Network Decentralisation with Large Language Models for Long-Horizon Time-Series Forecasting},
   author={Abdel-Sater, Raed and Hamza, A. Ben},
   journal={arXiv preprint arXiv:2025.xxxxx},
-  year={2025}
+  year={2025},
+  institution={Concordia Institute for Information Systems Engineering, Concordia University}
 }
 ```
 
@@ -426,8 +431,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For questions and collaborations:
-- **Raed Abdel-Sater**: [email@concordia.ca]
-- **A. Ben Hamza**: [email@concordia.ca]
+- **Author**: [Raed Abdel-Sater](mailto:raed.abdelsater@mail.concordia.ca)
+- **Supervisor**: [Prof. A. Ben Hamza](mailto:hamza@concordia.ca)
+- **Institution**: Concordia Institute for Information Systems Engineering, Concordia University
 
 ---
 

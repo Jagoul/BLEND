@@ -1,0 +1,424 @@
+# BLEND Framework Default Configuration
+# Blockchain-Enhanced Network Decentralisation with Large Language Models
+
+# Experiment Settings
+experiment:
+  name: "blend_default"
+  description: "Default BLEND configuration for time-series forecasting"
+  seed: 42
+  output_dir: "./results"
+  log_level: "INFO"
+
+# Model Configuration
+model:
+  name: "qwen-3-8b"
+  model_path: null  # Will download from HuggingFace if null
+  task_alignment:
+    use_deita: true
+    use_dpo_ts: true
+    deita_config:
+      max_length: 2048
+      learning_rate: 2e-5
+      num_epochs: 3
+      batch_size: 4
+    dpo_config:
+      beta: 0.1
+      learning_rate: 1e-5
+      num_epochs: 2
+      batch_size: 2
+
+# QLoRA Configuration
+qlora:
+  rank: 16
+  alpha: 32
+  dropout: 0.1
+  quantization_bits: 4
+  use_gradient_checkpointing: true
+  target_modules:
+    - "q_proj"
+    - "v_proj"
+    - "k_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# Training Configuration
+training:
+  global_rounds: 200
+  local_epochs: 3
+  batch_size: 64
+  learning_rate: 1e-3
+  weight_decay: 0.01
+  warmup_steps: 100
+  max_grad_norm: 1.0
+  
+  # FedADAM parameters
+  fedadam:
+    beta1: 0.9
+    beta2: 0.999
+    epsilon: 1e-8
+    tau: 1e-3
+
+# Data Configuration
+data:
+  lookback_window: 720
+  prediction_horizons: [96, 192, 336, 720]
+  normalize: true
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  
+  # Dataset-specific settings
+  datasets:
+    ETTh1:
+      features: 7
+      target_feature: "OT"
+      freq: "H"
+    ETTh2:
+      features: 7
+      target_feature: "OT"
+      freq: "H"
+    ETTm1:
+      features: 7
+      target_feature: "OT"
+      freq: "15T"
+    ETTm2:
+      features: 7
+      target_feature: "OT"
+      freq: "15T"
+    Weather:
+      features: 21
+      target_feature: "OT"
+      freq: "10T"
+    Electricity:
+      features: 321
+      target_feature: "MT_320"
+      freq: "H"
+    Traffic:
+      features: 862
+      target_feature: "Sensor_861"
+      freq: "H"
+
+# Multi-Agent System Configuration
+agents:
+  num_miners: 10
+  num_evaluators: 3
+  
+  # Publisher configuration
+  publisher:
+    broadcast_interval: 30  # seconds
+    task_timeout: 300  # seconds
+  
+  # Oracle configuration
+  oracle:
+    update_frequency: 5  # rounds
+    context_sources:
+      - "weather_api"
+      - "traffic_api"
+      - "news_api"
+      - "energy_api"
+    relevance_threshold: 0.3
+  
+  # Miner configuration
+  miners:
+    data_heterogeneity: "iid"  # "iid" or "non_iid"
+    non_iid_alpha: 0.5  # Dirichlet parameter for non-IID
+    local_data_size: 1000  # samples per miner
+  
+  # Evaluator configuration
+  evaluators:
+    validation_size: 200  # samples for evaluation
+    scoring_weights:
+      performance: 0.7
+      stake: 0.2
+      reputation: 0.1
+
+# Blockchain Configuration
+blockchain:
+  network_type: "consortium"  # "consortium" or "private"
+  consensus_protocol: "proof_of_forecast"
+  
+  # Hyperledger Fabric settings
+  fabric:
+    channel_name: "blend-channel"
+    chaincode_name: "blend-chaincode"
+    organization: "BlendOrg"
+    peer_address: "localhost:7051"
+    orderer_address: "localhost:7050"
+    ca_address: "localhost:7054"
+  
+  # Block settings
+  block:
+    max_size: 1024  # KB
+    generation_rate: 1.3  # seconds
+    confirmation_threshold: 3
+
+# Consensus Configuration
+consensus:
+  protocol: "proof_of_forecast"
+  threshold: 0.67  # Byzantine fault tolerance (2/3)
+  max_debate_rounds: 10
+  min_proof_threshold: 0.1
+  
+  # Voting weights
+  voting_weights:
+    forecast_accuracy: 0.4
+    evaluation_consensus: 0.4
+    validation_performance: 0.1
+    stake_weight: 0.05
+    reputation_weight: 0.05
+
+# Incentive Mechanism Configuration
+incentives:
+  # Reward scales
+  rewards:
+    performance_scale: 1.0
+    evaluation_scale: 0.5
+    oracle_scale: 0.3
+    leader_scale: 0.2
+  
+  # Stake dynamics
+  stakes:
+    initial_stake: 100.0
+    decay_rate: 0.01
+    slash_threshold: 2.0  # standard deviations
+    min_stake: 1.0
+    max_stake: 10000.0
+  
+  # Reputation system
+  reputation:
+    initial_reputation: 1.0
+    learning_rate: 0.1
+    decay_factor: 0.99
+    min_reputation: 0.1
+    max_reputation: 2.0
+
+# Security Configuration
+security:
+  byzantine_tolerance: 0.33  # Maximum 33% Byzantine nodes
+  signature_algorithm: "ECDSA"
+  hash_algorithm: "SHA-256"
+  
+  # Privacy settings
+  differential_privacy:
+    enabled: false
+    epsilon: 1.0
+    delta: 1e-5
+    clip_norm: 1.0
+
+# Communication Configuration
+communication:
+  protocol: "grpc"  # "grpc" or "http"
+  timeout: 30  # seconds
+  max_retries: 3
+  compression: true
+  
+  # Network settings
+  network:
+    max_connections: 100
+    keepalive_interval: 30
+    message_size_limit: 4  # MB
+
+# Monitoring and Logging
+monitoring:
+  enable_wandb: false
+  enable_tensorboard: true
+  log_frequency: 10  # rounds
+  
+  # Metrics to track
+  metrics:
+    - "training_loss"
+    - "validation_mse"
+    - "validation_mae" 
+    - "consensus_success_rate"
+    - "byzantine_detection_rate"
+    - "communication_overhead"
+    - "training_time"
+  
+  # Alerts
+  alerts:
+    consensus_failure_threshold: 0.1  # Alert if success rate drops below 10%
+    byzantine_threshold: 0.2  # Alert if Byzantine rate exceeds 20%
+
+# Performance Configuration
+performance:
+  device: "auto"  # "auto", "cpu", "cuda", or specific GPU ID
+  mixed_precision: true
+  gradient_accumulation_steps: 1
+  dataloader_num_workers: 4
+  pin_memory: true
+  
+  # Memory optimization
+  memory:
+    max_memory_usage: 0.9  # Fraction of available GPU memory
+    offload_to_cpu: false
+    gradient_checkpointing: true
+  
+  # Distributed training
+  distributed:
+    backend: "nccl"
+    init_method: "env://"
+    world_size: 1
+    rank: 0
+
+# Evaluation Configuration
+evaluation:
+  metrics: ["MSE", "MAE", "RMSE", "MAPE"]
+  eval_frequency: 10  # rounds
+  save_predictions: true
+  
+  # Cross-validation
+  cross_validation:
+    enabled: false
+    folds: 5
+    strategy: "time_series_split"
+
+# Checkpointing and Model Saving
+checkpointing:
+  save_frequency: 50  # rounds
+  max_checkpoints: 5
+  save_optimizer_state: true
+  save_best_model: true
+  
+  # Model export
+  export_formats: ["pytorch", "onnx"]
+  quantize_exported_model: true
+
+# Ablation Study Configuration
+ablation:
+  components:
+    - "model_alignment"
+    - "oracle_agent"
+    - "proof_of_forecast"
+    - "byzantine_detection"
+  
+  configurations:
+    baseline:
+      model_alignment: false
+      oracle_agent: false
+      proof_of_forecast: false
+      byzantine_detection: false
+    
+    with_alignment:
+      model_alignment: true
+      oracle_agent: false
+      proof_of_forecast: false
+      byzantine_detection: false
+    
+    with_oracle:
+      model_alignment: true
+      oracle_agent: true
+      proof_of_forecast: false
+      byzantine_detection: false
+    
+    full_blend:
+      model_alignment: true
+      oracle_agent: true
+      proof_of_forecast: true
+      byzantine_detection: true
+
+# Hyperparameter Optimization
+hyperopt:
+  enabled: false
+  framework: "optuna"  # "optuna" or "ray_tune"
+  n_trials: 100
+  
+  # Search space
+  search_space:
+    learning_rate:
+      type: "log_uniform"
+      low: 1e-5
+      high: 1e-2
+    
+    qlora_rank:
+      type: "choice"
+      choices: [8, 16, 32, 64]
+    
+    local_epochs:
+      type: "int"
+      low: 1
+      high: 5
+    
+    consensus_threshold:
+      type: "uniform"
+      low: 0.5
+      high: 0.8
+
+# Experiment Reproducibility
+reproducibility:
+  deterministic: true
+  benchmark_mode: false
+  use_deterministic_algorithms: true
+  
+  # Random seeds for different components
+  seeds:
+    numpy: 42
+    torch: 42
+    python: 42
+    cuda: 42
+
+# Advanced Features
+advanced:
+  # Model compression
+  compression:
+    enabled: false
+    method: "quantization"  # "quantization", "pruning", "distillation"
+    compression_ratio: 0.5
+  
+  # Adaptive learning
+  adaptive_learning:
+    enabled: true
+    patience: 20
+    factor: 0.5
+    min_lr: 1e-6
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 50
+    min_delta: 1e-4
+    monitor: "validation_mse"
+    mode: "min"
+
+# Testing Configuration
+testing:
+  unit_tests: true
+  integration_tests: true
+  system_tests: true
+  
+  # Test datasets
+  test_data:
+    synthetic: true
+    benchmark: true
+    custom: false
+  
+  # Performance benchmarks
+  benchmarks:
+    baseline_models: ["DLinear", "PatchTST", "Time-LLM"]
+    federated_baselines: ["Fed-PatchTST", "FedTime"]
+    metrics: ["accuracy", "communication_cost", "training_time"]
+
+# Documentation
+documentation:
+  auto_generate: true
+  include_api_docs: true
+  include_examples: true
+  output_format: ["html", "pdf"]
+
+# Deployment Configuration
+deployment:
+  environment: "development"  # "development", "staging", "production"
+  
+  # Container settings
+  container:
+    base_image: "pytorch/pytorch:2.0.0-cuda11.7-cudnn8-devel"
+    requirements_file: "requirements.txt"
+    expose_ports: [8080, 8888]
+  
+  # Scaling
+  scaling:
+    auto_scale: false
+    min_replicas: 1
+    max_replicas: 10
+    target_cpu_utilization: 70

@@ -264,8 +264,6 @@ This comprehensive project structure provides a robust foundation for the BLEND 
 
 ## Quick Start
 
-## Quick Start
-
 ### Basic Usage
 
 ```python
@@ -411,7 +409,7 @@ The novel PoF protocol ensures model quality through:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions!
 
 ### Development Setup
 

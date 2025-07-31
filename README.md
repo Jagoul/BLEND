@@ -126,31 +126,11 @@ BLEND/
     └── system/                    # End-to-end system tests
 ```
 
+This comprehensive project structure provides a robust foundation for the BLEND framework, enabling research reproducibility, easy deployment, and future extensions while maintaining code quality and documentation standards.
+
 ## Quick Start
 
-### Prerequisites
-
-```bash
-# Python environment
-python >= 3.8
-pytorch >= 2.0.0
-transformers >= 4.30.0
-hyperledger-fabric >= 2.4
-```
-
-### Installation
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/BLEND.git
-cd BLEND
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install BLEND package
-pip install -e .
-```
+## Quick Start
 
 ### Basic Usage
 
@@ -319,6 +299,57 @@ The Oracle agent provides significant performance improvements through context-a
 - **32.1% average reduction** in MAE  
 - **40.1% average reduction** in MSE
 - **Strong correlation (κ = 0.91)** between news relevance and performance gains
+
+## Installation
+
+### Prerequisites
+
+```bash
+# Python environment
+python >= 3.8
+pytorch >= 2.0.0
+transformers >= 4.30.0
+hyperledger-fabric >= 2.4
+```
+
+### Quick Install
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/BLEND.git
+cd BLEND
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install BLEND package
+pip install -e .
+```
+
+### Advanced Installation
+
+For development or custom configurations:
+
+```bash
+# Create virtual environment
+python -m venv blend_env
+source blend_env/bin/activate  # Linux/Mac
+# or
+blend_env\Scripts\activate     # Windows
+
+# Install with all optional dependencies
+pip install -e ".[all]"
+```
+
+### Docker Installation
+
+```bash
+# Build Docker container
+docker build -t blend:latest .
+
+# Run with Docker Compose
+docker-compose up -d
+```
 
 ### System Efficiency
 

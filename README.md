@@ -39,7 +39,7 @@ BLEND addresses the architectural limitations of conventional federated learning
 BLEND implements a sophisticated six-step training workflow orchestrated by specialized agents:
 
 <div align="center">
-<img src="assets/images/results/figure1_training_workflow.png" alt="BLEND Training Workflow" width="800"/>
+<img src="assets/blend_framework.png" alt="BLEND Training Workflow" width="800"/>
 <br>
 <em><strong>Figure 1:</strong> BLEND training round workflow showing the six-step process: (1) Task initialization and pool formation, (2) Global model deployment and information broadcasting, (3) Miner local training and forecast generation, (4) Collaborative evaluation and scoring, (5) Consensus and model selection, (6) Block creation and iterative model advancement.</em>
 </div>
@@ -49,7 +49,7 @@ BLEND implements a sophisticated six-step training workflow orchestrated by spec
 Our task-aligned LLM architecture combines offline model alignment with online inference:
 
 <div align="center">
-<img src="assets/images/results/figure2_llm_architecture.png" alt="BLEND LLM Architecture" width="800"/>
+<img src="assets/llm_architecture.png" alt="BLEND LLM Architecture" width="800"/>
 <br>
 <em><strong>Figure 2:</strong> Three-phase BLEND architecture: Phase 1 performs offline model alignment using DEITA and DPO-TS, Phase 2 constructs unified prompts from time-series and contextual data, Phase 3 generates forecasts through autoregressive inference with QLoRA adapters.</em>
 </div>
@@ -59,7 +59,7 @@ Our task-aligned LLM architecture combines offline model alignment with online i
 Our comprehensive evaluation demonstrates BLEND's superior performance across multiple datasets and baselines:
 
 <div align="center">
-<img src="assets/images/results/figure3_performance_comparison.png" alt="Cross-dataset Performance Comparison" width="800"/>
+<img src="assets/cross_dataset_error_distribution_Best_MSE.png" alt="Cross-dataset Performance Comparison" width="800"/>
 <br>
 <em><strong>Figure 3:</strong> Cross-dataset error distribution comparison. BLEND achieves the lowest median MSE (≈0.30) with the tightest interquartile range, demonstrating both superior accuracy and exceptional consistency across all benchmark datasets compared to transformer-based, LLM-based, and linear baselines.</em>
 </div>
@@ -83,7 +83,7 @@ Our comprehensive evaluation demonstrates BLEND's superior performance across mu
 BLEND demonstrates superior convergence characteristics compared to traditional approaches:
 
 <div align="center">
-<img src="assets/images/results/figure4_training_convergence.png" alt="Training Convergence Comparison" width="800"/>
+<img src="assets/convergence_trajectory.png" alt="Training Convergence Comparison" width="800"/>
 <br>
 <em><strong>Figure 4:</strong> Convergence trajectories comparing centralized LLM, vanilla federated LLM, and BLEND over 60 training epochs. BLEND converges fastest to the lowest error (0.08) with superior stability, outperforming vanilla FL (0.17) by 53% and standalone training (0.49) by 84%.</em>
 </div>
@@ -98,7 +98,7 @@ BLEND demonstrates superior convergence characteristics compared to traditional 
 BLEND maintains robust performance even under significant Byzantine attacks:
 
 <div align="center">
-<img src="assets/images/results/figure5_byzantine_tolerance.png" alt="Byzantine Fault Tolerance" width="800"/>
+<img src="assets/byzantine_fault_tolerance.png" alt="Byzantine Fault Tolerance" width="800"/>
 <br>
 <em><strong>Figure 5:</strong> Byzantine fault tolerance evaluation showing BLEND's resilience under varying concentrations of malicious nodes. BLEND maintains acceptable performance even with 20% Byzantine nodes (9 out of 50), demonstrating superior robustness compared to centralized and vanilla federated approaches.</em>
 </div>
@@ -113,7 +113,7 @@ BLEND maintains robust performance even under significant Byzantine attacks:
 BLEND's consensus mechanism provides strong protection against data poisoning attacks:
 
 <div align="center">
-<img src="assets/images/results/figure6_data_poisoning.png" alt="Data Poisoning Resilience" width="800"/>
+<img src="assets/data_poisning_performance.png" alt="Data Poisoning Resilience" width="800"/>
 <br>
 <em><strong>Figure 6:</strong> MSE performance under 30% data poisoning attacks. While standard federated learning degrades significantly (0.167 → 0.324 MSE), BLEND maintains near-optimal performance (0.199 MSE), achieving 35% relative recovery through consensus-driven filtering.</em>
 </div>
@@ -128,7 +128,7 @@ BLEND's consensus mechanism provides strong protection against data poisoning at
 BLEND achieves significant communication overhead reduction through blockchain-enhanced coordination:
 
 <div align="center">
-<img src="assets/images/results/figure7_communication_overhead.png" alt="Communication Overhead Analysis" width="800"/>
+<img src="assets/communication_overhead.png" alt="Communication Overhead Analysis" width="800"/>
 <br>
 <em><strong>Figure 7:</strong> Communication overhead comparison across different network sizes. BLEND achieves up to 63% reduction in data transfer compared to traditional approaches, with nearly constant overhead regardless of network size due to efficient blockchain propagation.</em>
 </div>
@@ -143,7 +143,7 @@ BLEND achieves significant communication overhead reduction through blockchain-e
 Comprehensive ablation analysis demonstrates the contribution of each BLEND component:
 
 <div align="center">
-<img src="assets/images/results/figure8_ablation_study.png" alt="Comprehensive Ablation Study" width="800"/>
+<img src="assets/ablation_study_DPO_DEITA.png" alt="Comprehensive Ablation Study" width="800"/>
 <br>
 <em><strong>Figure 8:</strong> Multi-dimensional ablation study showing: (a-c) Forecasting trajectories across traffic scenarios, (d) Performance improvements with each component, (e) Dataset-wise MSE comparison, (f) Training convergence analysis, (g) Statistical significance analysis with p-values. The complete BLEND system achieves 32-38% performance gains over baseline.</em>
 </div>
@@ -159,7 +159,7 @@ Comprehensive ablation analysis demonstrates the contribution of each BLEND comp
 The Oracle agent provides significant performance improvements through context-aware information:
 
 <div align="center">
-<img src="assets/images/results/figure9_oracle_analysis.png" alt="Oracle Agent Contribution Analysis" width="800"/>
+<img src="assets/ablation_study_oracle_agent.png" alt="Oracle Agent Contribution Analysis" width="800"/>
 <br>
 <em><strong>Figure 9:</strong> Oracle agent impact analysis showing: (a-c) Forecasting performance across traffic scenarios, (d) Metric-wise improvements, (e) Error distribution analysis, (f) Improvement matrix across conditions, (g) Oracle impact correlation with news relevance scores across different traffic patterns.</em>
 </div>

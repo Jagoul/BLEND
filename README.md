@@ -32,136 +32,6 @@ BLEND addresses the architectural limitations of conventional federated learning
 - **Efficient Training**: 32-38% faster convergence compared to vanilla federated learning
 - **Scalable Communication**: Constant overhead regardless of participant count
 
-## Repository Structure
-
-```
-BLEND/
-├── README.md
-├── requirements.txt
-├── setup.py
-├── LICENSE
-├── .gitignore
-│
-├── blend/                          # Core framework implementation
-│   ├── __init__.py
-│   ├── agents/                     # Multi-agent system
-│   │   ├── __init__.py
-│   │   ├── publisher.py           # Publisher agent implementation
-│   │   ├── oracle.py              # Oracle agent for context data
-│   │   ├── miner.py               # Miner agent for local training
-│   │   ├── evaluator.py           # Model evaluation agent
-│   │   └── leader.py              # Leader agent for aggregation
-│   │
-│   ├── blockchain/                 # Blockchain infrastructure
-│   │   ├── __init__.py
-│   │   ├── consensus.py           # Proof-of-Forecast protocol
-│   │   ├── smart_contracts.py     # Contract implementations
-│   │   ├── block.py               # Block structure definitions
-│   │   └── fabric_client.py       # Hyperledger Fabric interface
-│   │
-│   ├── models/                     # LLM forecasting models
-│   │   ├── __init__.py
-│   │   ├── task_aligned_llm.py    # DEITA+DPO aligned model
-│   │   ├── qlora_adapter.py       # QLoRA implementation
-│   │   ├── patch_embedding.py     # PatchTST-style tokenization
-│   │   └── forecasting_head.py    # Prediction head module
-│   │
-│   ├── federated/                  # Federated learning components
-│   │   ├── __init__.py
-│   │   ├── fed_adam.py            # FedADAM optimization
-│   │   ├── aggregation.py         # Model aggregation logic
-│   │   └── communication.py       # Peer-to-peer communication
-│   │
-│   ├── incentives/                 # Reward and staking mechanisms
-│   │   ├── __init__.py
-│   │   ├── reward_system.py       # Multi-component rewards
-│   │   ├── stake_dynamics.py      # Stake management
-│   │   └── evaluation_scoring.py  # Performance scoring
-│   │
-│   └── utils/                      # Utility functions
-│       ├── __init__.py
-│       ├── data_loader.py         # Dataset preprocessing
-│       ├── metrics.py             # Evaluation metrics
-│       ├── visualization.py       # Result plotting
-│       └── config.py              # Configuration management
-│
-├── scripts/                        # Execution scripts
-│   ├── train_blend.py             # Main training script
-│   ├── run_experiments.py         # Benchmark evaluation
-│   ├── setup_blockchain.py        # Blockchain initialization
-│   ├── ablation_study.py          # Component ablation
-│   └── generate_results.py        # Result generation
-│
-├── configs/                        # Configuration files
-│   ├── default.yaml               # Default parameters
-│   ├── datasets/                  # Dataset-specific configs
-│   │   ├── ett.yaml
-│   │   ├── weather.yaml
-│   │   ├── electricity.yaml
-│   │   └── traffic.yaml
-│   └── models/                    # Model configurations
-│       ├── qwen_3_8b.yaml
-│       └── qlora_config.yaml
-│
-├── data/                          # Dataset directory
-│   ├── raw/                       # Raw dataset files
-│   ├── processed/                 # Preprocessed data
-│   └── splits/                    # Train/val/test splits
-│
-├── experiments/                   # Experimental results
-│   ├── benchmarks/                # Benchmark comparisons
-│   ├── ablation/                  # Ablation study results
-│   ├── resilience/                # Byzantine fault tolerance
-│   └── communication/             # Overhead analysis
-│
-├── docs/                          # Documentation
-│   ├── architecture.md            # System architecture
-│   ├── consensus_protocol.md      # PoF consensus details
-│   ├── api_reference.md           # API documentation
-│   └── deployment_guide.md        # Deployment instructions
-│
-└── tests/                         # Test suite
-    ├── unit/                      # Unit tests
-    ├── integration/               # Integration tests
-    └── system/                    # End-to-end system tests
-```
-
-This comprehensive project structure provides a robust foundation for the BLEND framework, enabling research reproducibility, easy deployment, and future extensions while maintaining code quality and documentation standards.
-
-## Quick Start
-
-## Quick Start
-
-### Basic Usage
-
-```python
-from blend import BLENDFramework
-from blend.agents import Publisher, Oracle, Miner, Evaluator, Leader
-from blend.models import TaskAlignedLLM
-
-# Initialize BLEND framework
-framework = BLENDFramework(
-    model_name="qwen-3-8b",
-    blockchain_config="configs/blockchain.yaml",
-    dataset="ETTh1"
-)
-
-# Setup multi-agent system
-agents = framework.setup_agents(
-    num_miners=10,
-    num_evaluators=3,
-    consensus_threshold=0.67
-)
-
-# Train with blockchain consensus
-results = framework.train(
-    epochs=200,
-    local_epochs=3,
-    learning_rate=1e-3,
-    consensus_protocol="proof_of_forecast"
-)
-```
-
 ## Experimental Results
 
 ### System Architecture and Training Workflow
@@ -299,6 +169,136 @@ The Oracle agent provides significant performance improvements through context-a
 - **32.1% average reduction** in MAE  
 - **40.1% average reduction** in MSE
 - **Strong correlation (κ = 0.91)** between news relevance and performance gains
+
+## Repository Structure
+
+```
+BLEND/
+├── README.md
+├── requirements.txt
+├── setup.py
+├── LICENSE
+├── .gitignore
+│
+├── blend/                          # Core framework implementation
+│   ├── __init__.py
+│   ├── agents/                     # Multi-agent system
+│   │   ├── __init__.py
+│   │   ├── publisher.py           # Publisher agent implementation
+│   │   ├── oracle.py              # Oracle agent for context data
+│   │   ├── miner.py               # Miner agent for local training
+│   │   ├── evaluator.py           # Model evaluation agent
+│   │   └── leader.py              # Leader agent for aggregation
+│   │
+│   ├── blockchain/                 # Blockchain infrastructure
+│   │   ├── __init__.py
+│   │   ├── consensus.py           # Proof-of-Forecast protocol
+│   │   ├── smart_contracts.py     # Contract implementations
+│   │   ├── block.py               # Block structure definitions
+│   │   └── fabric_client.py       # Hyperledger Fabric interface
+│   │
+│   ├── models/                     # LLM forecasting models
+│   │   ├── __init__.py
+│   │   ├── task_aligned_llm.py    # DEITA+DPO aligned model
+│   │   ├── qlora_adapter.py       # QLoRA implementation
+│   │   ├── patch_embedding.py     # PatchTST-style tokenization
+│   │   └── forecasting_head.py    # Prediction head module
+│   │
+│   ├── federated/                  # Federated learning components
+│   │   ├── __init__.py
+│   │   ├── fed_adam.py            # FedADAM optimization
+│   │   ├── aggregation.py         # Model aggregation logic
+│   │   └── communication.py       # Peer-to-peer communication
+│   │
+│   ├── incentives/                 # Reward and staking mechanisms
+│   │   ├── __init__.py
+│   │   ├── reward_system.py       # Multi-component rewards
+│   │   ├── stake_dynamics.py      # Stake management
+│   │   └── evaluation_scoring.py  # Performance scoring
+│   │
+│   └── utils/                      # Utility functions
+│       ├── __init__.py
+│       ├── data_loader.py         # Dataset preprocessing
+│       ├── metrics.py             # Evaluation metrics
+│       ├── visualization.py       # Result plotting
+│       └── config.py              # Configuration management
+│
+├── scripts/                        # Execution scripts
+│   ├── train_blend.py             # Main training script
+│   ├── run_experiments.py         # Benchmark evaluation
+│   ├── setup_blockchain.py        # Blockchain initialization
+│   ├── ablation_study.py          # Component ablation
+│   └── generate_results.py        # Result generation
+│
+├── configs/                        # Configuration files
+│   ├── default.yaml               # Default parameters
+│   ├── datasets/                  # Dataset-specific configs
+│   │   ├── ett.yaml
+│   │   ├── weather.yaml
+│   │   ├── electricity.yaml
+│   │   └── traffic.yaml
+│   └── models/                    # Model configurations
+│       ├── qwen_3_8b.yaml
+│       └── qlora_config.yaml
+│
+├── data/                          # Dataset directory
+│   ├── raw/                       # Raw dataset files
+│   ├── processed/                 # Preprocessed data
+│   └── splits/                    # Train/val/test splits
+│
+├── experiments/                   # Experimental results
+│   ├── benchmarks/                # Benchmark comparisons
+│   ├── ablation/                  # Ablation study results
+│   ├── resilience/                # Byzantine fault tolerance
+│   └── communication/             # Overhead analysis
+│
+├── docs/                          # Documentation
+│   ├── architecture.md            # System architecture
+│   ├── consensus_protocol.md      # PoF consensus details
+│   ├── api_reference.md           # API documentation
+│   └── deployment_guide.md        # Deployment instructions
+│
+└── tests/                         # Test suite
+    ├── unit/                      # Unit tests
+    ├── integration/               # Integration tests
+    └── system/                    # End-to-end system tests
+```
+
+This comprehensive project structure provides a robust foundation for the BLEND framework, enabling research reproducibility, easy deployment, and future extensions while maintaining code quality and documentation standards.
+
+## Quick Start
+
+## Quick Start
+
+### Basic Usage
+
+```python
+from blend import BLENDFramework
+from blend.agents import Publisher, Oracle, Miner, Evaluator, Leader
+from blend.models import TaskAlignedLLM
+
+# Initialize BLEND framework
+framework = BLENDFramework(
+    model_name="qwen-3-8b",
+    blockchain_config="configs/blockchain.yaml",
+    dataset="ETTh1"
+)
+
+# Setup multi-agent system
+agents = framework.setup_agents(
+    num_miners=10,
+    num_evaluators=3,
+    consensus_threshold=0.67
+)
+
+# Train with blockchain consensus
+results = framework.train(
+    epochs=200,
+    local_epochs=3,
+    learning_rate=1e-3,
+    consensus_protocol="proof_of_forecast"
+)
+```
 
 ## Installation
 
